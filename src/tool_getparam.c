@@ -188,7 +188,8 @@ static const struct LongShort aliases[]= {
   {"$P", "service-name",             ARG_STRING},
   {"$Q", "proto-default",            ARG_STRING},
   {"$R", "expect100-timeout",        ARG_STRING},
-  {"$S", "tftp-no-options",          ARG_BOOL},
+  //{"$S", "tftp-no-options",          ARG_BOOL},
+  {"$S", "sni-hostname",          ARG_STRING},
   {"$U", "connect-to",               ARG_STRING},
   {"$W", "abstract-unix-socket",     ARG_FILENAME},
   {"$X", "tls-max",                  ARG_STRING},
@@ -1113,8 +1114,8 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         if(err)
           return err;
         break;
-      case 'S': /* --tftp-no-options */
-        config->tftp_no_options = toggle;
+      case 'S': /* --sni-hostname */
+        GetStr(&config->sni_hostname, nextarg);
         break;
       case 'U': /* --connect-to */
         err = add2list(&config->connect_to, nextarg);

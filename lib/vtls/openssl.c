@@ -1468,10 +1468,16 @@ static CURLcode verifyhost(struct connectdata *conn, X509 *server_cert)
   CURLcode result = CURLE_OK;
   bool dNSName = FALSE; /* if a dNSName field exists in the cert */
   bool iPAddress = FALSE; /* if a iPAddress field exists in the cert */
-  const char * const hostname = SSL_IS_PROXY() ? conn->http_proxy.host.name :
+  const char * hostname = SSL_IS_PROXY() ? conn->http_proxy.host.name :
     conn->host.name;
-  const char * const dispname = SSL_IS_PROXY() ?
+  const char * dispname = SSL_IS_PROXY() ?
     conn->http_proxy.host.dispname : conn->host.dispname;
+
+  if (data->set.str[STRING_SNI_HOSTNAME])
+  {
+      hostname = data->set.str[STRING_SNI_HOSTNAME];
+      dispname = data->set.str[STRING_SNI_HOSTNAME];
+  }
 
 #ifdef ENABLE_IPV6
   if(conn->bits.ipv6_ip &&
@@ -2613,15 +2619,59 @@ static CURLcode ossl_connect_step1(struct connectdata *conn, int sockindex)
   SSL_set_connect_state(BACKEND->handle);
 
   BACKEND->server_cert = 0x0;
+
+  /* Set the SNI. If fail and SNI is user-specified then error, else warn. */
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
-  if((0 == Curl_inet_pton(AF_INET, hostname, &addr)) &&
+    if(sni)
+    {
+        const char *sni_hostname = data->set.str[STRING_SNI_HOSTNAME] ?
+                                   data->set.str[STRING_SNI_HOSTNAME] :
+                                   hostname;
+
+        bool sni_hostname_valid = false;
+        sni_hostname_valid = !Curl_inet_pton(AF_INET, sni_hostname, &addr);
 #ifdef ENABLE_IPV6
-     (0 == Curl_inet_pton(AF_INET6, hostname, &addr)) &&
+        if (sni_hostname_valid)
+        {
+            sni_hostname_valid = !Curl_inet_pton(AF_INET6, sni_hostname, &addr);
+        }
 #endif
-     sni &&
-     !SSL_set_tlsext_host_name(BACKEND->handle, hostname))
-    infof(data, "WARNING: failed to configure server name indication (SNI) "
+
+        if (!sni_hostname_valid)
+        {
+            if (sni_hostname == data->set.str[STRING_SNI_HOSTNAME])
+            {
+                failf(data, "ERROR: failed to configure server name indication (SNI) "
+                            "TLS extension - IP address SNI is not supported\n");
+                return CURLE_SSL_CONNECT_ERROR;
+            }
+
+            infof(data, "WARNING: failed to configure server name indication (SNI) "
+                        "TLS extension - IP address SNI is not supported\n");
+        }
+        else
+        {
+            if (!SSL_set_tlsext_host_name(BACKEND->handle, sni_hostname))
+            {
+                if (sni_hostname == data->set.str[STRING_SNI_HOSTNAME])
+                {
+                    failf(data, "ERROR: failed to configure server name indication (SNI) "
+                                "TLS extension - OpenSSL SSL_set_tlsext_host_name failed\n");
+                    return CURLE_SSL_CONNECT_ERROR;
+                }
+
+                infof(data, "WARNING: failed to configure server name indication (SNI) "
+                            "TLS extension - OpenSSL SSL_set_tlsext_host_name failed\n");
+            }
+        }
+    }
+#else
+  if(data->set.str[STRING_SNI_HOSTNAME])
+  {
+    failf(data, "ERROR: failed to configure server name indication (SNI) "
           "TLS extension\n");
+    return CURLE_SSL_CONNECT_ERROR;
+  }
 #endif
 
   /* Check if there's a cached ID we can/should use here! */
