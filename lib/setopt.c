@@ -2865,6 +2865,14 @@ CURLcode Curl_vsetopt(struct Curl_easy *data, CURLoption option, va_list param)
       return result;
     break;
 #endif
+/* SNI Patch */
+#ifdef USE_OPENSSL
+    case CURLOPT_SNI_HOSTNAME:
+      result = Curl_setstropt(&data->set.str[STRING_SNI_HOSTNAME],
+                              va_arg(param, char *));
+      break;
+#endif
+/* SNI Patch */
   default:
     /* unknown tag and its companion, just ignore: */
     result = CURLE_UNKNOWN_OPTION;

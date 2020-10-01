@@ -2053,6 +2053,10 @@ static CURLcode single_transfer(struct GlobalConfig *global,
 
         if(config->disallow_username_in_url)
           my_setopt(curl, CURLOPT_DISALLOW_USERNAME_IN_URL, 1L);
+          
+        /* Guardicore */
+        if(config->sni_hostname)
+          my_setopt_str(curl, CURLOPT_SNI_HOSTNAME, config->sni_hostname);
 
         if(config->altsvc)
           my_setopt_str(curl, CURLOPT_ALTSVC, config->altsvc);

@@ -132,6 +132,7 @@ static void free_config_fields(struct OperationConfig *config)
   Curl_safefree(config->etag_save_file);
   Curl_safefree(config->etag_compare_file);
   Curl_safefree(config->request_target);
+  Curl_safefree(config->sni_hostname);
   Curl_safefree(config->customrequest);
   Curl_safefree(config->krblevel);
 

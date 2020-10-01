@@ -1503,6 +1503,7 @@ enum dupstring {
   STRING_SET_RANGE,       /* range, if used */
   STRING_SET_REFERER,     /* custom string for the HTTP referer field */
   STRING_SET_URL,         /* what original URL to work on */
+  STRING_SNI_HOSTNAME,    /* SNI Patch */
   STRING_SSL_CAPATH_ORIG, /* CA directory name (doesn't work on windows) */
   STRING_SSL_CAPATH_PROXY, /* CA directory name (doesn't work on windows) */
   STRING_SSL_CAFILE_ORIG, /* certificate file to verify peer against */

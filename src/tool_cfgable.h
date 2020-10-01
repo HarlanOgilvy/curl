@@ -157,6 +157,7 @@ struct OperationConfig {
   char *pubkey;
   char *hostpubmd5;
   char *engine;
+  char *sni_hostname;
   char *etag_save_file;
   char *etag_compare_file;
   bool crlf;
